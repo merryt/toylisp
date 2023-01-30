@@ -21,6 +21,15 @@ int main(int argc, char** argv){
 	puts("hello, world");
 	printf("count: %d ?", add_togeather(3,4));
 
-	
+	puts("/n");
+	for(int i = 0; i < 5; i++){
+		puts("hello worlds");
+	}
+	int i=0;
+	while(i < 5){
+		puts("while...");
+		i++;
+	}
+
 	return 0;
 }
