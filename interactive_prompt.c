@@ -1,15 +1,19 @@
 #include <stdio.h>
+#include <stdlib.h>
 
-static char input[2048];
+#include <editline/readline.h>
+#include <editline/history.h>
 
 int main(int argc, char** argv){
     puts("=== Toylisp repl ====");
     puts("Press Ctrl+c to exit /n");
     for(;;){
-        fputs("tlisp> ", stdout);
-        fgets(input, 2048, stdin);
-        printf("NO your a %s", input);
+        char* input = readline("tlisp> ");
 
+        add_history(input);
+
+        printf("NO your a %s", input);
+        free(input);
     }
     return 0;
 }
