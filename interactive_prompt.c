@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <math.h>
 #include "mpc.h"
 
 /* If we are compiling on Windows compile these functions */
@@ -28,9 +29,80 @@ void add_history(char *unused) {}
 #include <editline/history.h>
 #endif
 
+long eval_op(long x, char *op, long y)
+{
+  if (strcmp(op, "+") == 0)
+  {
+    return x + y;
+  }
+  if (strcmp(op, "-") == 0)
+  {
+    return x - y;
+  }
+  if (strcmp(op, "*") == 0)
+  {
+    return x * y;
+  }
+  if (strcmp(op, "/") == 0)
+  {
+    return x / y;
+  }
+  if (strcmp(op, "%") == 0)
+  {
+    return x % y;
+  }
+  if (strcmp(op, "^") == 0)
+  {
+    return pow(x, y);
+  }
+  if (strcmp(op, "min") == 0)
+  {
+    if (x < y)
+    {
+      return x;
+    }
+    else
+    {
+      return y;
+    }
+  }
+  if (strcmp(op, "max") == 0)
+  {
+    if (x > y)
+    {
+      return x;
+    }
+    else
+    {
+      return y;
+    }
+  }
+  return 0;
+}
+
 long eval(mpc_ast_t *t)
 {
-  return 0;
+  // If tagged as a number return it directly
+  if (strstr(t->tag, "number")) // strstr compares two strings, it finds the second paramater in the first
+  {
+    return atoi(t->contents); // atoi converts a string to an int
+  }
+
+  // the operator is always the second child
+  char *op = t->children[1]->contents;
+
+  // we store the third child in 'x'
+  long x = eval(t->children[2]);
+
+  // we store the third child in 'x'
+  int i = 3;
+  while (strstr(t->children[i]->tag, "expr"))
+  {
+    x = eval_op(x, op, eval(t->children[i]));
+    i++;
+  }
+
+  return x;
 }
 
 int main(int argc, char **argv)
@@ -41,11 +113,11 @@ int main(int argc, char **argv)
   mpc_parser_t *TLISP = mpc_new("tlisp");
 
   mpca_lang(MPCA_LANG_DEFAULT,
-            "                                                         \
-    number    : /-?[0-9IO]+/;                                   \
-    operator  : '+' | '-' | '*' | '/' | '%';                  \
-    expr      : <number> | '(' <operator> <expr>+ ')';        \
-    tlisp     : /^/ <operator> <expr>+ /$/ ;                  \
+            "                                                             \
+    number    : /-?[0-9IO]+/;                                             \
+    operator  : '+' | '-' | '*' | '/' | '%' | '^' | /(min)/ | /(max)/;    \
+    expr      : <number> | '(' <operator> <expr>+ ')';                    \
+    tlisp     : /^/ <operator> <expr>+ /$/ ;                              \
     ",
             Number, Operator, Expr, TLISP);
 
