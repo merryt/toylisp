@@ -29,17 +29,21 @@ void add_history(char* unused) { }
 #include <editline/readline.h>
 #endif
 
-typedef struct
-{
+typedef struct lval {
     int type;
     long num;
-    int err;
+    char* err;
+    char* sym;
+    int count;
+    struct lval** cell;
 } lval; // lval stands for Lisp VALue
 
 /* Create Enumeration of Possible lval Types */
 enum {
     LVAL_NUM,
-    LVAL_ERR
+    LVAL_ERR,
+    LVAL_SYM,
+    LVAL_SEXPR
 };
 
 /* Create Enumeration of Possible Error Types */
@@ -174,18 +178,20 @@ lval eval(mpc_ast_t* t)
 int main(int argc, char** argv)
 {
     mpc_parser_t* Number = mpc_new("number");
-    mpc_parser_t* Operator = mpc_new("operator");
+    mpc_parser_t* Symbol = mpc_new("symbol");
+    mpc_parser_t* Sexpr = mpc_new("Sexpr");
     mpc_parser_t* Expr = mpc_new("expr");
     mpc_parser_t* TLISP = mpc_new("tlisp");
 
     mpca_lang(MPCA_LANG_DEFAULT,
-        "                                                             \
+        "                                                                 \
     number    : /-?[0-9IO]+/;                                             \
-    operator  : '+' | '-' | '*' | '/' | '%' | '^' | /(min)/ | /(max)/;    \
+    symbol  : '+' | '-' | '*' | '/' | '%' | '^' | /(min)/ | /(max)/;      \
+    sexpr  : '(' <expr>* ')' ;                                            \
     expr      : <number> | '(' <operator> <expr>+ ')';                    \
     tlisp     : /^/ <operator> <expr>+ /$/ ;                              \
     ",
-        Number, Operator, Expr, TLISP);
+        Number, Symbol, Sexpr, Expr, TLISP);
 
     puts("Toy testing lisp repl");
     puts("Press Ctrl+c to Exit\n");
@@ -206,6 +212,6 @@ int main(int argc, char** argv)
 
         free(input);
     }
-    mpc_cleanup(4, Number, Operator, Expr, TLISP);
+    mpc_cleanup(5, Number, Symbol, Sexpr, Expr, TLISP);
     return 0;
 }
